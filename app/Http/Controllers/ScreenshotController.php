@@ -12,6 +12,11 @@ class ScreenshotController extends Controller
         $request->validate(['url' => 'required|url']);
 
         $screenshot = Browsershot::url($request->url)
+            //npx @puppeteer/browsers install chromedriver@canary
+            ->setChromePath('/var/www/laravel/chromedriver/linux-120.0.6091.0/chromedriver-linux64/chromedriver')
+            ->newHeadless()
+            ->noSandbox()
+            ->timeout(120)
             ->screenshot();
 
         return response($screenshot, 200, [
@@ -24,7 +29,11 @@ class ScreenshotController extends Controller
         $request->validate(['html' => 'required|string']);
 
         $screenshot = Browsershot::html($request->html)
-            ->applyStylesheet(public_path('css/app.css'))  // Assuming you have tailwind setup in your Laravel project
+            //npx @puppeteer/browsers install chromedriver@canary
+            ->setChromePath('/var/www/laravel/chromedriver/linux-120.0.6091.0/chromedriver-linux64/chromedriver')
+            ->newHeadless()
+            ->noSandbox()
+            ->timeout(120)
             ->screenshot();
 
         return response($screenshot, 200, [

@@ -1,66 +1,136 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Laravel Screenshot Service
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This is a Laravel-based microservice for capturing website screenshots using the `spatie/browsershot` package. It provides API endpoints to take snapshots of websites by URL or by rendering provided HTML with Tailwind CSS.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+-   Capture screenshots from a URL.
+-   Render HTML with Tailwind CSS and capture screenshots.
+-   Token-based authentication using Laravel Sanctum.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Requirements
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+-   PHP >= 7.3
+-   Composer
+-   Node & npm
+-   Puppeteer (for `spatie/browsershot`)
 
-## Learning Laravel
+## Installation
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+1.  **Clone the Repository:**
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+    ```sh
+    git clone https://github.com/thedevdojo/screenshot.git
+    cd screenshot
+    ```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+2.  **Install Dependencies:**
 
-## Laravel Sponsors
+    ```sh
+    composer install
+    npm install
+    ```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+3.  **Set up Environment Variables:**
 
-### Premium Partners
+    Copy the `.env.example` file to a new file named `.env` and update the necessary configuration settings, including database and API configuration.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+4.  **Run Database Migrations:**
+
+    ```sh
+    php artisan migrate
+    ```
+
+5.  **Start the Server:**
+
+    ```sh
+    php artisan serve
+    ```
+
+
+## Usage
+
+### Endpoints:
+
+1.  **Capture Screenshot from URL:**
+
+    **Endpoint:** `/api/snap-from-url`
+
+    **Method:** `POST`
+
+    **Headers:**
+
+    -   `Content-Type: application/json`
+    -   `Authorization: Bearer YOUR_TOKEN`
+
+    **Payload:**
+
+    ```json
+    {   "url": "https://www.example.com" }
+    ```
+
+2.  **Render HTML with Tailwind and Capture Screenshot:**
+
+    **Endpoint:** `/api/snap-from-html`
+
+    **Method:** `POST`
+
+    **Headers:**
+
+    -   `Content-Type: application/json`
+    -   `Authorization: Bearer YOUR_TOKEN`
+
+    **Payload:**
+
+    ```json
+    {   "html": "<div class='bg-blue-500 text-white p-4'>Hello, Tailwind!</div>" }
+    ```
+
+
+### Authentication:
+
+You need to authenticate your requests using Laravel Sanctum. Please refer to the Laravel Sanctum documentation for generating and managing tokens.
+
+## Examples
+
+1.  **Endpoint for Taking a Snapshot of a URL**:
+
+    Before you can make a request to this endpoint, ensure you have an authentication token. Assuming you've implemented Laravel Sanctum's token authentication, you would first get a token and then include it in the headers for authentication.
+
+    First, get a token:
+
+    ```bash
+    curl -X POST -H "Content-Type: application/json" -d '{"email":"test@example.com", "password":"testpassword"}' https://screenshot.devdojo.com/api/login
+    ```
+
+    Export the token as an env var:
+
+    ```bash
+    export API_TOKEN="YOUR_API_TOKEN_HERE"
+    ```
+
+    Then make a request to the endpoint:
+
+    ```bash
+    curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $API_TOKEN" -d '{"url":"https://www.example.com"}' https://screenshot.devdojo.com/api/snap-from-url --output screenshot.png
+    ```
+
+    This will save the screenshot as `screenshot.png` in your current directory.
+
+2.  **Endpoint for Rendering HTML with Tailwind and Taking a Screenshot**:
+
+    Here's how you would send an HTML snippet to be rendered and then captured:
+
+    ```bash
+    curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $API_TOKEN" -d '{"html":"<div class=\"bg-blue-500 text-white p-4\">Hello, Tailwind!</div>"}' https://screenshot.devdojo.com/api/snap-from-html --output rendered_screenshot.png
+    ```
+
+    This will save the rendered screenshot as `rendered_screenshot.png` in your current directory.
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Contributions are welcome! Please feel free to submit a pull request.
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

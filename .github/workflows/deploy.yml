@@ -1,0 +1,26 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Deploy to DigitalOcean
+      env:
+        DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        SERVER_IP: 64.227.5.132
+        SERVER_USER: larasail
+      run: |
+        echo "$DEPLOY_SSH_KEY" > deploy_key
+        chmod 600 deploy_key
+        scp -i deploy_key -r . $SERVER_USER@$SERVER_IP:/vaw/www/laravel
+        ssh -i deploy_key $SERVER_USER@$SERVER_IP "cd /vaw/www/laravel && composer install --no-dev && php artisan migrate --force && php artisan optimize"
+        rm -f deploy_key
