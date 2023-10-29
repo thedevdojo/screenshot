@@ -12,8 +12,7 @@ class ScreenshotController extends Controller
         $request->validate(['url' => 'required|url']);
 
         $screenshot = Browsershot::url($request->url)
-            //npx @puppeteer/browsers install chromedriver@canary
-            ->setChromePath('/var/www/laravel/chromedriver/linux-120.0.6091.0/chromedriver-linux64/chromedriver')
+            ->setChromePath('/snap/bin/chromium')
             ->newHeadless()
             ->noSandbox()
             ->timeout(120)
@@ -27,13 +26,14 @@ class ScreenshotController extends Controller
     public function snapFromHtml(Request $request)
     {
         $request->validate(['html' => 'required|string']);
+        $html = '<html><head><script src="https://cdn.tailwindcss.com"></script></head><body>' . $request->html . '</body></html>';
 
-        $screenshot = Browsershot::html($request->html)
-            //npx @puppeteer/browsers install chromedriver@canary
-            ->setChromePath('/var/www/laravel/chromedriver/linux-120.0.6091.0/chromedriver-linux64/chromedriver')
+        $screenshot = Browsershot::html($html)
+            ->setChromePath('/snap/bin/chromium')
             ->newHeadless()
             ->noSandbox()
             ->timeout(120)
+            ->setContentUrl('https://www.example.com')
             ->screenshot();
 
         return response($screenshot, 200, [
