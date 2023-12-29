@@ -16,9 +16,7 @@ class ScreenshotController extends Controller
 	    ->setChromePath('/snap/bin/chromium')
 	    ->windowSize(1536, 864)
             ->newHeadless()
-            ->noSandbox()
-            ->waitUntilNetworkIdle()
-            ->setDelay(500)
+	    ->noSandbox()
             ->timeout(120)
             ->screenshot();
 
