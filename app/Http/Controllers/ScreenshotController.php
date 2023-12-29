@@ -16,6 +16,8 @@ class ScreenshotController extends Controller
             ->windowSize(1920, 1080)
             ->newHeadless()
             ->noSandbox()
+            ->waitUntilNetworkIdle()
+            ->setDelay(500)
             ->timeout(120)
             ->screenshot();
 
