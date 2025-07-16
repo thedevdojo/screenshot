@@ -13,7 +13,7 @@ class ScreenshotController extends Controller
         $request->validate(['url' => 'required|url']);
 
         $screenshot = Browsershot::url($request->url)
-	    ->setChromePath('/snap/bin/chromium')
+	    ->setChromePath('/usr/bin/google-chrome')
 	    ->windowSize(1536, 864)
             ->newHeadless()
 	    ->noSandbox()
@@ -32,7 +32,7 @@ class ScreenshotController extends Controller
         $html = '<html><head><script src="https://cdn.tailwindcss.com"></script></head><body>' . $request->html . '</body></html>';
 
         $screenshot = Browsershot::html($html)
-            ->setChromePath('/snap/bin/chromium')
+            ->setChromePath('/usr/bin/google-chrome')
             ->windowSize(1536, 864)
             ->newHeadless()
             ->noSandbox()
