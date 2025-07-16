@@ -21,6 +21,8 @@ jobs:
       run: |
         echo "$DEPLOY_SSH_KEY" > deploy_key
         chmod 600 deploy_key
-        scp -i deploy_key -r . $SERVER_USER@$SERVER_IP:/vaw/www/laravel
-        ssh -i deploy_key $SERVER_USER@$SERVER_IP "cd /vaw/www/laravel && composer install --no-dev && php artisan migrate --force && php artisan optimize"
+        ssh-keyscan -H $SERVER_IP >> ~/.ssh/known_hosts
+        scp -i deploy_key -r . $SERVER_USER@$SERVER_IP:/var/www/laravel
+        ssh -i deploy_key $SERVER_USER@$SERVER_IP "cd /var/www/laravel && composer install --no-dev && php artisan migrate --force && php artisan optimize"
         rm -f deploy_key
+
