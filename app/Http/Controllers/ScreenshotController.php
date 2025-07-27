@@ -29,7 +29,13 @@ class ScreenshotController extends Controller
     {
         $request->validate(['html' => 'required|string']);
         
-        $html = '<html><head><script src="https://cdn.tailwindcss.com"></script></head><body>' . $request->html . '</body></html>';
+        // If the request contains tailwind_version == 4, use the CDN for Tailwind CSS v4
+        if ($request->tailwind_version == 4) {
+            $tailwind_cdn = '<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>';
+        } else {
+            $tailwind_cdn = '<script src="https://cdn.tailwindcss.com"></script>';
+        }
+        $html = '<html><head>'. $tailwind_cdn . '</head><body>' . $request->html . '</body></html>';
 
         $screenshot = Browsershot::html($html)
             ->setChromePath('/snap/bin/chromium')
