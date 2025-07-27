@@ -16,7 +16,7 @@ class ScreenshotController extends Controller
 
     /**
      * Take a screenshot from a URL
-     *
+     *  
      * @param Request $request
      * @return \Illuminate\Http\Response
      */
@@ -52,6 +52,7 @@ class ScreenshotController extends Controller
         $screenshot = Browsershot::html($html)
             ->setChromePath('/usr/bin/google-chrome')
             ->windowSize($width, $height)
+            ->deviceScaleFactor(2)
             ->newHeadless()
             ->noSandbox()
             ->timeout(120)
