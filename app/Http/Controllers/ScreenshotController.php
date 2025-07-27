@@ -30,14 +30,17 @@ class ScreenshotController extends Controller
         $request->validate(['html' => 'required|string']);
         
         // If the request contains tailwind_version == 4, use the CDN for Tailwind CSS v4
-        // if (isset($request->tailwind_version) && $request->tailwind_version == 4) {
-        //     $tailwind_cdn = '<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>';
-        // } else {
+        if (isset($request->tailwind_version) && $request->tailwind_version == 4) {
+             $tailwind_cdn = '<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>';
+        } else {
              $tailwind_cdn = '<script src="https://cdn.tailwindcss.com"></script>';
-        // }
-        $html = '<html><head>'. $tailwind_cdn . '</head><body>' . $request->html . '</body></html>';
+        }
 
-        
+        $default_font_stack = '<style>body{ font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; }</style>';
+
+        $html = '<html><head>'. $default_font_stack . $tailwind_cdn . '</head><body class="antialiased>' . $request->html . '</body></html>';
+
+
         $screenshot = Browsershot::html($html)
             ->setChromePath('/usr/bin/google-chrome')
             ->windowSize(1536, 864)
