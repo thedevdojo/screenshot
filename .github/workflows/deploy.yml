@@ -23,6 +23,6 @@ jobs:
         chmod 600 deploy_key
         mkdir -p ~/.ssh
         ssh-keyscan -H $SERVER_IP >> ~/.ssh/known_hosts
-        scp -i deploy_key -r . $SERVER_USER@$SERVER_IP:/var/www/laravel
+        rsync -avz --exclude='.git' --exclude='node_modules' --exclude='.env' -e "ssh -i deploy_key" . $SERVER_USER@$SERVER_IP:/var/www/laravel/
         ssh -i deploy_key $SERVER_USER@$SERVER_IP "cd /var/www/laravel && composer install --no-dev && php artisan migrate --force && php artisan optimize"
         rm -f deploy_key
