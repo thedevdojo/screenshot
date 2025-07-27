@@ -101,9 +101,10 @@ class ScreenshotController extends Controller
      */
     protected function prepareHtml(string $content, string $tailwindCdn): string
     {
-        $defaultFontStack = '<style>body{ font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; }</style>';
+        $fontStack = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">';
+        $fontStack .= '<style>html, body{ font-family: "Inter", sans-serif; font-optical-sizing: auto; }</style>';
         
-        return '<html><head>' . $defaultFontStack . $tailwindCdn . '</head><body class="antialiased">' . $content . '</body></html>';
+        return '<html><head>' . $fontStack . $tailwindCdn . '</head><body class="antialiased">' . $content . '</body></html>';
     }
 
     /**
