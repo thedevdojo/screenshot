@@ -8,50 +8,111 @@ use Spatie\Image\Manipulations;
 
 class ScreenshotController extends Controller
 {
+    /**
+     * Default window dimensions for screenshots
+     */
+    protected const DEFAULT_WIDTH = 1536;
+    protected const DEFAULT_HEIGHT = 864;
+
+    /**
+     * Take a screenshot from a URL
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
     public function snapFromUrl(Request $request)
     {
         $request->validate(['url' => 'required|url']);
 
         $screenshot = Browsershot::url($request->url)
-	    ->setChromePath('/usr/bin/google-chrome')
-	    ->windowSize(1536, 864)
+            ->setChromePath('/usr/bin/google-chrome')
+            ->windowSize(1536, 864)
             ->newHeadless()
-	    ->noSandbox()
+            ->noSandbox()
             ->timeout(120)
             ->screenshot();
 
-        return response($screenshot, 200, [
-            'Content-Type' => 'image/png',
-        ]);
+        return $this->createImageResponse($screenshot);
     }
 
+    /**
+     * Take a screenshot from HTML content
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
     public function snapFromHtml(Request $request)
     {
         $request->validate(['html' => 'required|string']);
         
-        // If the request contains tailwind_version == 4, use the CDN for Tailwind CSS v4
-        if (isset($request->tailwind_version) && $request->tailwind_version == 4) {
-             $tailwind_cdn = '<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>';
-        } else {
-             $tailwind_cdn = '<script src="https://cdn.tailwindcss.com"></script>';
-        }
-
-        $default_font_stack = '<style>body{ font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; }</style>';
-
-        $html = '<html><head>'. $default_font_stack . $tailwind_cdn . '</head><body class="antialiased>' . $request->html . '</body></html>';
-
+        $tailwindCdn = $this->getTailwindCdn($request);
+        list($width, $height) = $this->getDimensions($request);
+        $html = $this->prepareHtml($request->html, $tailwindCdn);
 
         $screenshot = Browsershot::html($html)
             ->setChromePath('/usr/bin/google-chrome')
-            ->windowSize(1536, 864)
+            ->windowSize($width, $height)
             ->newHeadless()
             ->noSandbox()
             ->timeout(120)
             ->setContentUrl('https://www.example.com')
             ->screenshot();
 
-        
+        return $this->createImageResponse($screenshot);
+    }
 
+    /**
+     * Get the appropriate Tailwind CDN based on version
+     *
+     * @param Request $request
+     * @return string
+     */
+    protected function getTailwindCdn(Request $request): string
+    {
+        if (isset($request->tailwind_version) && $request->tailwind_version == 4) {
+            return '<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>';
+        }
+        
+        return '<script src="https://cdn.tailwindcss.com"></script>';
+    }
+
+    /**
+     * Get the dimensions for the screenshot
+     *
+     * @param Request $request
+     * @return array
+     */
+    protected function getDimensions(Request $request): array
+    {
+        if (isset($request->width) && isset($request->height)) {
+            return [$request->width, $request->height];
+        }
+        
+        return [self::DEFAULT_WIDTH, self::DEFAULT_HEIGHT];
+    }
+
+    /**
+     * Prepare the HTML with necessary styles and scripts
+     *
+     * @param string $content
+     * @param string $tailwindCdn
+     * @return string
+     */
+    protected function prepareHtml(string $content, string $tailwindCdn): string
+    {
+        $defaultFontStack = '<style>body{ font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; }</style>';
+        
+        return '<html><head>' . $defaultFontStack . $tailwindCdn . '</head><body class="antialiased">' . $content . '</body></html>';
+    }
+
+    /**
+     * Create an image response from screenshot data
+     *
+     * @param string $screenshot
+     * @return \Illuminate\Http\Response
+     */
+    protected function createImageResponse(string $screenshot)
+    {
         return response($screenshot, 200, [
             'Content-Type' => 'image/png',
         ]);
