@@ -30,11 +30,11 @@ class ScreenshotController extends Controller
         $request->validate(['html' => 'required|string']);
         
         // If the request contains tailwind_version == 4, use the CDN for Tailwind CSS v4
-        if (isset($request->tailwind_version) && $request->tailwind_version == 4) {
-            $tailwind_cdn = '<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>';
-        } else {
-            $tailwind_cdn = '<script src="https://cdn.tailwindcss.com"></script>';
-        }
+        // if (isset($request->tailwind_version) && $request->tailwind_version == 4) {
+        //     $tailwind_cdn = '<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>';
+        // } else {
+        //     $tailwind_cdn = '<script src="https://cdn.tailwindcss.com"></script>';
+        // }
         $html = '<html><head>'. $tailwind_cdn . '</head><body>' . $request->html . '</body></html>';
 
         $screenshot = Browsershot::html($html)
