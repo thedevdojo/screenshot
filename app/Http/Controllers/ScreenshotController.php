@@ -36,6 +36,14 @@ class ScreenshotController extends Controller
              $tailwind_cdn = '<script src="https://cdn.tailwindcss.com"></script>';
         }
 
+        if(isset($request->width) && isset($request->height)) {
+            $width = $request->width;
+            $height = $request->height;
+        } else {
+            $width = 1536;
+            $height = 864;
+        }
+
         $default_font_stack = '<style>body{ font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; }</style>';
 
         $html = '<html><head>'. $default_font_stack . $tailwind_cdn . '</head><body class="antialiased>' . $request->html . '</body></html>';
@@ -43,7 +51,7 @@ class ScreenshotController extends Controller
 
         $screenshot = Browsershot::html($html)
             ->setChromePath('/usr/bin/google-chrome')
-            ->windowSize(1536, 864)
+            ->windowSize($width, $height)
             ->newHeadless()
             ->noSandbox()
             ->timeout(120)
