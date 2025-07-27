@@ -37,6 +37,7 @@ class ScreenshotController extends Controller
         // }
         $html = '<html><head>'. $tailwind_cdn . '</head><body>' . $request->html . '</body></html>';
 
+        
         $screenshot = Browsershot::html($html)
             ->setChromePath('/usr/bin/google-chrome')
             ->windowSize(1536, 864)
