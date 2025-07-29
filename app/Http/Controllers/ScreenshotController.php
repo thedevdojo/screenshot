@@ -23,10 +23,14 @@ class ScreenshotController extends Controller
     public function snapFromUrl(Request $request)
     {
         $request->validate(['url' => 'required|url']);
+        
+        list($width, $height) = $this->getDimensions($request);
 
         $screenshot = Browsershot::url($request->url)
             ->setChromePath('/usr/bin/google-chrome')
-            ->windowSize(1536, 864)
+            ->windowSize($width, $height)
+            ->deviceScaleFactor(2)
+            ->waitUntilNetworkIdle()
             ->newHeadless()
             ->noSandbox()
             ->timeout(120)
