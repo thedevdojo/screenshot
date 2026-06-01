@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Spatie\Browsershot\Browsershot;
-use Spatie\Image\Manipulations;
 
 class ScreenshotController extends Controller
 {
