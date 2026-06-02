@@ -20,12 +20,13 @@ return [
     | Chrome path
     |--------------------------------------------------------------------------
     |
-    | Path to the Chrome/Chromium binary. Leave null to let puppeteer use its
-    | own bundled Chromium.
+    | Path to the Chrome/Chromium binary. Leave unset/empty to let puppeteer
+    | resolve its own downloaded Chromium (e.g. ~/.cache/puppeteer). Only set
+    | this if you have a specific system Chrome you want to force.
     |
     */
 
-    'chrome_path' => env('BROWSERSHOT_CHROME_PATH', '/usr/bin/google-chrome'),
+    'chrome_path' => env('BROWSERSHOT_CHROME_PATH'),
 
     /*
     |--------------------------------------------------------------------------
