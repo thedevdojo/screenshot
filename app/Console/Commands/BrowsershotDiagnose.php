@@ -34,14 +34,43 @@ class BrowsershotDiagnose extends Command
         $this->line('  uname -a:   ' . $this->runShell('uname -a'));
         $this->line('  libc:       ' . $this->detectLibc());
 
-        // 2. Which Chrome binaries can we find?
+        // 2. Is a system Chromium installed, and is Browsershot configured to use it?
+        $this->components->info('System Chromium & Browsershot config');
+        $configured = config('browsershot.chrome_path');
+        $this->line('  BROWSERSHOT_CHROME_PATH: ' . ($configured ? '<info>' . $configured . '</info>' : '<fg=yellow>(not set — Browsershot will NOT use system chromium until you set this)</>'));
+        $onPath = $this->runShell('command -v chromium chromium-browser google-chrome google-chrome-stable chrome 2>/dev/null');
+        $this->line('  chromium on PATH:        ' . ($onPath === '(nothing found)' ? '<fg=yellow>none</>' : '<info>' . str_replace("\n", ', ', $onPath) . '</info>'));
+
+        // 3. Which Chrome/Chromium binaries can we find anywhere?
         $this->components->info('Chrome / Chromium binaries Browsershot might use');
 
         $candidates = [];
-        if ($configured = config('browsershot.chrome_path')) {
+        if ($configured) {
             $candidates[] = $configured;
         }
 
+        // System install locations (e.g. installed via nixpacks aptPkgs = ['chromium']).
+        foreach (preg_split('/\r?\n/', $onPath) as $line) {
+            $line = trim($line);
+            if ($line !== '' && $line !== '(nothing found)') {
+                $candidates[] = $line;
+            }
+        }
+        foreach ([
+            '/usr/bin/chromium',
+            '/usr/bin/chromium-browser',
+            '/usr/lib/chromium/chromium',
+            '/usr/lib/chromium-browser/chromium-browser',
+            '/snap/bin/chromium',
+            '/usr/bin/google-chrome',
+            '/usr/bin/google-chrome-stable',
+        ] as $path) {
+            if (is_file($path)) {
+                $candidates[] = $path;
+            }
+        }
+
+        // Puppeteer's downloaded cache.
         $found = $this->runShell(
             'find '
             . escapeshellarg($home . '/.cache/puppeteer') . ' '
@@ -146,13 +175,19 @@ class BrowsershotDiagnose extends Command
 
         $codes = array_unique(array_map(fn ($v) => $v['code'], $verdicts));
         if (in_array('arch', $codes, true) && $isLinuxArm) {
-            $this->line('  <fg=red>✗ ARCHITECTURE MISMATCH on Linux ARM64.</> The downloaded Chrome is an x86-64 binary.');
+            $this->line('  <fg=red>✗ ARCHITECTURE MISMATCH on Linux ARM64.</> Only x86-64 Chrome binaries are present.');
             $this->line('    Google publishes NO Chrome-for-Testing build for linux-arm64, so puppeteer cannot');
-            $this->line('    download a native-ARM Chrome here. `--platform linux_arm` just refetches the x64 build.');
-            $this->line('    Fix it one of two ways:');
-            $this->line('      1. Run the app on an <comment>x86_64</comment> instance — the x64 Chrome you already have then works as-is.');
-            $this->line('      2. Use the distro\'s native arm64 Chromium and point Browsershot at it:');
-            $this->line('           <comment>apt-get install -y chromium</comment>   then   <comment>BROWSERSHOT_CHROME_PATH=/usr/bin/chromium</comment>');
+            $this->line('    download a native-ARM Chrome here. You need the distro\'s native arm64 Chromium.');
+            $this->newLine();
+            if ($onPath === '(nothing found)' && ! is_file('/usr/bin/chromium')) {
+                $this->line('    <fg=red>→ No system chromium is installed.</> nixpacks did NOT install it.');
+                $this->line('      Confirm <comment>nixpacks.toml</comment> (with <comment>aptPkgs = [\'chromium\']</comment>) is on the deployed branch,');
+                $this->line('      that the deploy actually rebuilt, and check the build log for the apt step.');
+                $this->line('      If aptPkgs is ignored, try <comment>nixPkgs = [\'chromium\']</comment> instead.');
+            } else {
+                $this->line('    <info>→ A system chromium IS present</info> but Browsershot is not using it.');
+                $this->line('      Set <comment>BROWSERSHOT_CHROME_PATH</comment> to it (see the system chromium path above) and redeploy.');
+            }
         } elseif (in_array('arch', $codes, true)) {
             $this->line('  <fg=red>✗ ARCHITECTURE MISMATCH.</> The downloaded Chrome is for a different CPU than this runtime.');
             $this->line('    Build machine and runtime architectures differ. Install Chrome on the RUNTIME arch:');
