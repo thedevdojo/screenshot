@@ -52,23 +52,28 @@ class CheckPuppeteer extends Command
 
         $this->info('✓ puppeteer found (v' . $version . ') at ' . $puppeteerPath);
 
-        // Prove node can actually resolve the module from this NODE_PATH.
+        // Actually LOAD puppeteer (not just resolve its path) the same way
+        // browser.cjs does. This triggers puppeteer's internal ESM import of
+        // puppeteer-core, which NODE_PATH does NOT satisfy — so it catches the
+        // "directory must be named node_modules" class of failure too.
         $command = sprintf(
             'NODE_PATH=%s node -e %s 2>&1',
             escapeshellarg($modulePath),
-            escapeshellarg('require.resolve("puppeteer"); console.log(require.resolve("puppeteer"))')
+            escapeshellarg('require("puppeteer"); console.log("fully loaded from " + require.resolve("puppeteer"))')
         );
 
         exec($command, $output, $exitCode);
 
         if ($exitCode === 0) {
-            $this->info('✓ node resolved puppeteer: ' . implode("\n", $output));
+            $this->info('✓ node fully loaded puppeteer: ' . implode("\n", $output));
 
             return self::SUCCESS;
         }
 
-        $this->error('✗ node could not resolve puppeteer from this NODE_PATH:');
+        $this->error('✗ node resolved puppeteer\'s path but failed to load it from this NODE_PATH:');
         $this->line('  ' . implode("\n  ", $output));
+        $this->line('  (If this mentions puppeteer-core / ERR_MODULE_NOT_FOUND, the module');
+        $this->line('   directory must be named exactly "node_modules" so ESM resolution works.)');
 
         return self::FAILURE;
     }
