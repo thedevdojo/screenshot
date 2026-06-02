@@ -141,8 +141,19 @@ class BrowsershotDiagnose extends Command
             return self::SUCCESS;
         }
 
+        $isLinux = stripos($this->runShell('uname -s'), 'linux') !== false;
+        $isLinuxArm = $isLinux && in_array(strtolower($runtimeArch), ['aarch64', 'arm64'], true);
+
         $codes = array_unique(array_map(fn ($v) => $v['code'], $verdicts));
-        if (in_array('arch', $codes, true)) {
+        if (in_array('arch', $codes, true) && $isLinuxArm) {
+            $this->line('  <fg=red>✗ ARCHITECTURE MISMATCH on Linux ARM64.</> The downloaded Chrome is an x86-64 binary.');
+            $this->line('    Google publishes NO Chrome-for-Testing build for linux-arm64, so puppeteer cannot');
+            $this->line('    download a native-ARM Chrome here. `--platform linux_arm` just refetches the x64 build.');
+            $this->line('    Fix it one of two ways:');
+            $this->line('      1. Run the app on an <comment>x86_64</comment> instance — the x64 Chrome you already have then works as-is.');
+            $this->line('      2. Use the distro\'s native arm64 Chromium and point Browsershot at it:');
+            $this->line('           <comment>apt-get install -y chromium</comment>   then   <comment>BROWSERSHOT_CHROME_PATH=/usr/bin/chromium</comment>');
+        } elseif (in_array('arch', $codes, true)) {
             $this->line('  <fg=red>✗ ARCHITECTURE MISMATCH.</> The downloaded Chrome is for a different CPU than this runtime.');
             $this->line('    Build machine and runtime architectures differ. Install Chrome on the RUNTIME arch:');
             $this->line('      <comment>npx puppeteer browsers install chrome</comment>   (run on the runtime, not the builder)');
