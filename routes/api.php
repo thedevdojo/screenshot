@@ -11,10 +11,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::group(function () {
+//Route::group(function () {
     Route::get('/hello', function(){
         return 'Hey There';
     });
     Route::post('/snap-from-url', [ScreenshotController::class, 'snapFromUrl']);
     Route::post('/snap-from-html', [ScreenshotController::class, 'snapFromHtml']);
-});
+//});
