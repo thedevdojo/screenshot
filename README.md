@@ -127,6 +127,48 @@ You need to authenticate your requests using Laravel Sanctum. Please refer to th
 
     This will save the rendered screenshot as `rendered_screenshot.png` in your current directory.
 
+## Getting spatie/browsershot working with Laravel Cloud
+
+`spatie/browsershot` drives a headless Chrome through Puppeteer, and that's where Laravel Cloud gets tricky: Laravel Cloud runs on **ARM64 (aarch64)**, but Google does not publish a Chrome / Chrome-for-Testing build for `linux-arm64`, so the Chromium that Puppeteer auto-downloads is an **x86-64 binary that can't execute on the runtime** (`Exec format error`). On top of that, Laravel Cloud's build runs as an **unprivileged user with no root, no `sudo`, and no apt package indices**, and **only `$HOME` (`/var/www`) persists** from build into runtime — so you can't just `apt install chromium` or its libraries.
+
+The fix is a self-contained build step that (1) uses **Playwright** purely as a *downloader* to fetch a **native arm64 Chromium** (Playwright compiles and hosts Chromium for arm64, unlike Google), (2) downloads Chromium's required **shared libraries** (`libglib`, `libgbm`, `libasound`, etc.) directly from the Debian package mirror over HTTPS — since the base image doesn't ship them and apt isn't available — and (3) wraps the browser in a small launcher that exposes those libraries via `LD_LIBRARY_PATH`, then points Browsershot at it with `BROWSERSHOT_CHROME_PATH`. Everything lands under `$HOME`, so it survives into the running app.
+
+### Setup
+
+The two scripts that do this live in [`deploy/chromium.sh`](deploy/chromium.sh) (orchestration + the `LD_LIBRARY_PATH` launcher) and [`deploy/install-chromium-deps.cjs`](deploy/install-chromium-deps.cjs) (a Node resolver that walks the Debian dependency graph and downloads the arm64 `.deb`s without apt). To enable it on Laravel Cloud:
+
+1.  **Add the build command** (Settings → Deployments → Build Commands), after your existing `composer`/`npm` steps:
+
+    ```sh
+    bash deploy/chromium.sh
+    ```
+
+2.  **Set the environment variable** (Settings → Environment) so Browsershot uses the installed browser instead of Puppeteer's broken download:
+
+    ```sh
+    BROWSERSHOT_CHROME_PATH=/var/www/bin/chromium
+    # Optional: skip Puppeteer's pointless x86-64 Chrome download during npm install
+    PUPPETEER_SKIP_DOWNLOAD=true
+    ```
+
+3.  **Read `BROWSERSHOT_CHROME_PATH` in your Browsershot call** (see `config/browsershot.php` and `app/Http/Controllers/ScreenshotController.php`):
+
+    ```php
+    if ($chromePath = config('browsershot.chrome_path')) {
+        $browsershot->setChromePath($chromePath);
+    }
+    ```
+
+4.  **Deploy, then verify** on the server with the bundled diagnostic command, which finds the Chrome binary, checks its architecture and shared libraries, and actually tries to launch it:
+
+    ```sh
+    php artisan browsershot:diagnose
+    ```
+
+    A `VERDICT: WORKS ✓` for `/var/www/bin/chromium` means Browsershot is ready.
+
+> **Note:** This is specific to ARM64 hosts that lack Chrome's system libraries (like Laravel Cloud). On a normal x86-64 server you can usually just let Puppeteer download its own Chrome, or `apt install` the libraries directly.
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a pull request.
