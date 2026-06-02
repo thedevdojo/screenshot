@@ -57,16 +57,20 @@ class ScreenshotController extends Controller
         list($width, $height) = $this->getDimensions($request);
         $html = $this->prepareHtml($request->html, $tailwindCdn);
 
-        $screenshot = Browsershot::html($html)
-            ->setChromePath(config('browsershot.chrome_path'))
+        $browsershot = Browsershot::html($html)
             ->setNodeModulePath(config('browsershot.node_module_path'))
             ->windowSize($width, $height)
             ->deviceScaleFactor(2)
             ->newHeadless()
             ->noSandbox()
             ->timeout(120)
-            ->setContentUrl('https://www.example.com')
-            ->screenshot();
+            ->setContentUrl('https://www.example.com');
+
+        if ($chromePath = config('browsershot.chrome_path')) {
+            $browsershot->setChromePath($chromePath);
+        }
+
+        $screenshot = $browsershot->screenshot();
 
         return $this->createImageResponse($screenshot);
     }
