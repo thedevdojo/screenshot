@@ -6,7 +6,7 @@ Deploy your own screenshot service to [Laravel Cloud](https://laravel.com/cloud)
 curl -X POST \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer SCREENSHOT_API_KEY" \
-    -d '{"url":"https://google.com' \
+    -d '{"url":"https://google.com"}' \
     https://CLOUD_URL/api/snap-from-url \
     --output ./screenshot.png && open ./screenshot.png
 ```
