@@ -113,42 +113,6 @@ php artisan screenshot:key
 
 This sets `SCREENSHOT_API_KEY` in `.env`. You can also set it by hand to any value (e.g. `SCREENSHOT_API_KEY=password`) — any request sending that exact value as the Bearer token is allowed; everything else gets a `401`. If `SCREENSHOT_API_KEY` is left empty, the endpoints are **open** (no auth), so the service works out of the box — set a key to lock it down.
 
-## Examples
-
-1.  **Endpoint for Taking a Snapshot of a URL**:
-
-    Before you can make a request to this endpoint, ensure you have an authentication token. Assuming you've implemented Laravel Sanctum's token authentication, you would first get a token and then include it in the headers for authentication.
-
-    First, get a token:
-
-    ```bash
-    curl -X POST -H "Content-Type: application/json" -d '{"email":"test@example.com", "password":"testpassword"}' https://screenshot.devdojo.com/api/login
-    ```
-
-    Export the token as an env var:
-
-    ```bash
-    export API_TOKEN="YOUR_API_TOKEN_HERE"
-    ```
-
-    Then make a request to the endpoint:
-
-    ```bash
-    curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $API_TOKEN" -d '{"url":"https://www.example.com"}' https://screenshot.devdojo.com/api/snap-from-url --output screenshot.png
-    ```
-
-    This will save the screenshot as `screenshot.png` in your current directory.
-
-2.  **Endpoint for Rendering HTML with Tailwind and Taking a Screenshot**:
-
-    Here's how you would send an HTML snippet to be rendered and then captured:
-
-    ```bash
-    curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $API_TOKEN" -d '{"html":"<div class=\"bg-blue-500 text-white p-4\">Hello, Tailwind!</div>"}' https://screenshot.devdojo.com/api/snap-from-html --output rendered_screenshot.png
-    ```
-
-    This will save the rendered screenshot as `rendered_screenshot.png` in your current directory.
-
 ## Getting spatie/browsershot working with Laravel Cloud
 
 `spatie/browsershot` drives a headless Chrome through Puppeteer, and that's where Laravel Cloud gets tricky: Laravel Cloud runs on **ARM64 (aarch64)**, but Google does not publish a Chrome / Chrome-for-Testing build for `linux-arm64`, so the Chromium that Puppeteer auto-downloads is an **x86-64 binary that can't execute on the runtime** (`Exec format error`). On top of that, Laravel Cloud's build runs as an **unprivileged user with no root, no `sudo`, and no apt package indices**, and **only `$HOME` (`/var/www`) persists** from build into runtime — so you can't just `apt install chromium` or its libraries.
