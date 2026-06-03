@@ -50,12 +50,14 @@ To install via Laravel Cloud, fork this repo, connect the repo when creating a n
 
 ### Example
 
+```bash
 curl -X POST \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer password" \
     -d '{"html":"<p class=\"bg-green-400 p-10\">Tailwind support out of the box</p>"}' \
     https://screenshot.laravel.cloud/api/snap-from-html \
     --output ./screenshot.png && open ./screenshot.png
+```
 
 
 ### Endpoints:
@@ -69,7 +71,7 @@ curl -X POST \
     **Headers:**
 
     -   `Content-Type: application/json`
-    -   `Authorization: Bearer YOUR_TOKEN`
+    -   `Authorization: Bearer SCREENSHOT_API_KEY`
 
     **Payload:**
 
@@ -86,7 +88,7 @@ curl -X POST \
     **Headers:**
 
     -   `Content-Type: application/json`
-    -   `Authorization: Bearer YOUR_TOKEN`
+    -   `Authorization: Bearer SCREENSHOT_API_KEY`
 
     **Payload:**
 
