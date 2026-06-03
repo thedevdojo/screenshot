@@ -4,20 +4,11 @@ Deploy a screenshot micro-service from [Laravel Cloud](https://laravel.com/cloud
 
 This micro-service will allow you to generate website screenshots from a **URL** or **HTML**. Under the hood this service utilizes `puppeteer` and `spatie/browsershot` (learn how we got it working with Cloud below). 
 
-## Features
-
--   Capture screenshots from a URL.
--   Render HTML with Tailwind CSS and capture screenshots.
--   Token-based authentication using Laravel Sanctum.
-
-## Requirements
-
--   PHP >= 7.3
--   Composer
--   Node & npm
--   Puppeteer (for `spatie/browsershot`)
-
 ## Installation
+
+### Laravel Cloud
+
+### Local Install
 
 1.  **Clone the Repository:**
 
@@ -37,25 +28,15 @@ This micro-service will allow you to generate website screenshots from a **URL**
 
     Copy the `.env.example` file to a new file named `.env` and update the necessary configuration settings, including database and API configuration.
 
-4.  **Run Database Migrations:**
-
-    ```sh
-    php artisan migrate
-    ```
-
-5.  **Start the Server:**
-
-    ```sh
-    php artisan serve
-    ```
-
 
 ## Usage
 
 ### Example
 
-curl -X POST -H "Content-Type: application/json" \
-    -d '{"html":"<p class='bg-pink-200 text-indigo-600'>Tailwind support out of the box</div>"}' \
+curl -X POST \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer password" \
+    -d '{"html":"<p class=\"bg-green-400 p-10\">Tailwind support out of the box</p>"}' \
     https://screenshot.laravel.cloud/api/snap-from-html \
     --output ./screenshot.png && open ./screenshot.png
 

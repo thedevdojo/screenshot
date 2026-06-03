@@ -23,3 +23,5 @@ Route::get('/example-url', function () {
 
     return redirect($shot->url());
 });
+
+Route::view('example-new', 'example-new');
