@@ -18,8 +18,7 @@ Route::get('/example', function () {
 
 // Demo: screenshot a live URL and display it from its public URL.
 Route::get('/example-url', function () {
-    $shot = screenshot()
-        ->url('https://google.com')
+    $shot = screenshot('https://google.com')
         ->save('screenshots/example-url.png');
 
     return redirect($shot->url());

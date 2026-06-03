@@ -6,9 +6,8 @@ use DevDojo\ScreenshotClient\ScreenshotManager;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @method static \DevDojo\ScreenshotClient\PendingScreenshot url(string $url)
+ * @method static \DevDojo\ScreenshotClient\PendingScreenshot make(?string $url = null)
  * @method static \DevDojo\ScreenshotClient\PendingScreenshot html(string $html)
- * @method static \DevDojo\ScreenshotClient\PendingScreenshot make()
  *
  * @see ScreenshotManager
  */

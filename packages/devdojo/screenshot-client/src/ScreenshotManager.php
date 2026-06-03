@@ -9,18 +9,17 @@ namespace DevDojo\ScreenshotClient;
  */
 class ScreenshotManager
 {
-    public function url(string $url): PendingScreenshot
+    /**
+     * Start a screenshot. Pass a URL to screenshot that page, or omit it and
+     * chain ->html(...) for HTML content.
+     */
+    public function make(?string $url = null): PendingScreenshot
     {
-        return $this->make()->url($url);
+        return new PendingScreenshot($url);
     }
 
     public function html(string $html): PendingScreenshot
     {
         return $this->make()->html($html);
-    }
-
-    public function make(): PendingScreenshot
-    {
-        return new PendingScreenshot;
     }
 }

@@ -23,17 +23,21 @@ A **self-contained Composer package living inside this repo** at `packages/devdo
 ### Invocation (both helper and facade)
 
 ```php
-screenshot()->url('https://google.com')->save();   // global helper
-Screenshot::url('https://google.com')->save();      // facade
-screenshot()->html('<div>...</div>')->save();
-screenshot('https://google.com')->save();           // shortcut: string arg = URL
+// URL: pass it to the helper / make(); HTML: chain ->html()
+screenshot('https://google.com')->save()->url();    // global helper
+Screenshot::make('https://google.com')->save()->url();  // facade
+screenshot()->html('<div>...</div>')->save()->url();
 ```
 
-Both the helper and the facade return a `PendingScreenshot` builder. `screenshot()` with no argument returns an empty builder; `screenshot($string)` pre-sets the URL source.
+The URL source is supplied as the helper / `make()` argument (a bare string is
+treated as a URL); HTML content is supplied via `->html()`. This keeps `url()` as
+a single concept — the **output** URL on `StoredScreenshot` — avoiding a same-named
+input/output method. `screenshot()` / `Screenshot::make()` with no argument returns
+an empty builder for use with `->html()`.
 
 ### Source methods (on PendingScreenshot, return $this)
 
-- `url(string $url): static`
+- `__construct(?string $url = null)` — a URL passed to the helper/`make()` sets the URL source.
 - `html(string $html): static`
 
 ### Option methods (chainable, return $this)

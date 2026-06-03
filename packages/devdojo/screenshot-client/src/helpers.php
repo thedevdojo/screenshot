@@ -12,8 +12,6 @@ if (! function_exists('screenshot')) {
      */
     function screenshot(?string $url = null): PendingScreenshot
     {
-        $manager = app(ScreenshotManager::class);
-
-        return $url !== null ? $manager->url($url) : $manager->make();
+        return app(ScreenshotManager::class)->make($url);
     }
 }

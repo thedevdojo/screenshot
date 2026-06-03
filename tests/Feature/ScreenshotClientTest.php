@@ -29,6 +29,7 @@ class ScreenshotClientTest extends TestCase
     {
         $this->assertInstanceOf(PendingScreenshot::class, screenshot());
         $this->assertInstanceOf(PendingScreenshot::class, screenshot('https://google.com'));
+        $this->assertInstanceOf(PendingScreenshot::class, Screenshot::make('https://google.com'));
         $this->assertInstanceOf(PendingScreenshot::class, Screenshot::html('<p>hi</p>'));
     }
 
@@ -59,7 +60,7 @@ class ScreenshotClientTest extends TestCase
         });
     }
 
-    public function test_url_shortcut_hits_the_url_endpoint(): void
+    public function test_url_passed_to_helper_hits_the_url_endpoint(): void
     {
         Http::fake(['*' => Http::response('PNG', 200)]);
 
@@ -67,6 +68,16 @@ class ScreenshotClientTest extends TestCase
 
         Http::assertSent(fn ($request) => $request->url() === 'https://screenshot.test/api/snap-from-url'
             && $request['url'] === 'https://google.com');
+    }
+
+    public function test_facade_make_with_url_hits_the_url_endpoint(): void
+    {
+        Http::fake(['*' => Http::response('PNG', 200)]);
+
+        Screenshot::make('https://example.com')->save();
+
+        Http::assertSent(fn ($request) => $request->url() === 'https://screenshot.test/api/snap-from-url'
+            && $request['url'] === 'https://example.com');
     }
 
     public function test_save_auto_generates_a_path_when_none_given(): void

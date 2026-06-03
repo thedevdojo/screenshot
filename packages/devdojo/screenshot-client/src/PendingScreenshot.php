@@ -30,16 +30,20 @@ class PendingScreenshot
 
     protected ?string $disk = null;
 
+    /**
+     * A URL passed here (e.g. via screenshot('https://…')) becomes the source.
+     * Use html() for HTML content.
+     */
+    public function __construct(?string $url = null)
+    {
+        if ($url !== null) {
+            $this->source = 'url';
+            $this->sourceValue = $url;
+        }
+    }
+
     /*
     | Source -------------------------------------------------------------- */
-
-    public function url(string $url): static
-    {
-        $this->source = 'url';
-        $this->sourceValue = $url;
-
-        return $this;
-    }
 
     public function html(string $html): static
     {
