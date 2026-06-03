@@ -1,12 +1,31 @@
 # Screenshot Service
 
-Deploy a screenshot micro-service to [Laravel Cloud](https://laravel.com/cloud).
+Deploy a screenshot micro-service to [Laravel Cloud](https://laravel.com/cloud). Deploy it and run `php artisan screenshot:key`, this will generate your new API Key. Now, you can easily generate website screenshots from a **URL** or **HTML**. 
 
-This micro-service will allow you to generate website screenshots from a **URL** or **HTML**. Under the hood this service utilizes `puppeteer` and `spatie/browsershot` (learn more about how we [got it working with Cloud below](#getting-spatiebrowsershot-working-with-laravel-cloud)). 
+Now you can start sending POST requests to the API:
+
+```
+curl -X POST \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer SCREENSHOT_API_KEY" \
+    -d '{"url":"https://google.com' \
+    https://CLOUD_URL/api/snap-from-url \
+    --output ./screenshot.png && open ./screenshot.png
+```
+
+> Be sure to swap out `SCREENSHOT_API_KEY` with your API Key and swap out CLOUD_URL with your `laravel.cloud` domain.
+
+To make things even easier, you can utilize the [Laravel client package](https://github.com/thedevdojo/screenshot-client), and use a handful of helper methods like this:
+
+```
+<img src="{{ screenshot('https://google.com')->save('screenshot.png')->url() }}" />
+```
 
 ## Installation
 
 ### Laravel Cloud
+
+To install via Laravel Cloud, fork this repo, connect the repo when creating a new app in Laravel Cloud and you're good to go. Be sure to add a Redis or Valkey cache to your environment and you're ready to start snapping screenshots 📸
 
 ### Local Install
 
