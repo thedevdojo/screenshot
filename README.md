@@ -99,7 +99,19 @@ curl -X POST -H "Content-Type: application/json" \
 
 ### Authentication:
 
-You need to authenticate your requests using Laravel Sanctum. Please refer to the Laravel Sanctum documentation for generating and managing tokens.
+The screenshot endpoints are protected by a single shared **API key**. Send it as a Bearer token:
+
+```
+Authorization: Bearer <your-key>
+```
+
+Generate a strong key and write it to your `.env` automatically:
+
+```bash
+php artisan screenshot:key
+```
+
+This sets `SCREENSHOT_API_KEY` in `.env`. You can also set it by hand to any value (e.g. `SCREENSHOT_API_KEY=password`) — any request sending that exact value as the Bearer token is allowed; everything else gets a `401`. If `SCREENSHOT_API_KEY` is left empty, the endpoints are **open** (no auth), so the service works out of the box — set a key to lock it down.
 
 ## Examples
 
@@ -145,7 +157,14 @@ The fix is a self-contained build step that (1) uses **Playwright** purely as a 
 
 ### Setup
 
-The two scripts that do this live in [`deploy/chromium.sh`](deploy/chromium.sh) (orchestration + the `LD_LIBRARY_PATH` launcher) and [`deploy/install-chromium-deps.cjs`](deploy/install-chromium-deps.cjs) (a Node resolver that walks the Debian dependency graph and downloads the arm64 `.deb`s without apt). To enable it on Laravel Cloud:
+The two scripts that do this live in [`deploy/chromium.sh`](deploy/chromium.sh) (orchestration + the `LD_LIBRARY_PATH` launcher) and [`deploy/install-chromium-deps.cjs`](deploy/install-chromium-deps.cjs) (a Node resolver that walks the Debian dependency graph and downloads the arm64 `.deb`s without apt).
+
+**This is wired up to be zero-config** — deploy the repo to Laravel Cloud and it just works:
+
+- The paths are auto-detected in `config/browsershot.php` (Chrome at `/var/www/bin/chromium`, node modules at `/var/www/browsershot/node_modules`) when they exist, so **you don't need to set any environment variables**.
+- Puppeteer's pointless x86-64 Chrome download is skipped automatically on `linux-arm64` via [`.puppeteerrc.cjs`](.puppeteerrc.cjs).
+
+The only manual step is the build command:
 
 1.  **Add the build command** (Settings → Deployments → Build Commands), after your existing `composer`/`npm` steps:
 
@@ -153,23 +172,7 @@ The two scripts that do this live in [`deploy/chromium.sh`](deploy/chromium.sh) 
     bash deploy/chromium.sh
     ```
 
-2.  **Set the environment variable** (Settings → Environment) so Browsershot uses the installed browser instead of Puppeteer's broken download:
-
-    ```sh
-    BROWSERSHOT_CHROME_PATH=/var/www/bin/chromium
-    # Optional: skip Puppeteer's pointless x86-64 Chrome download during npm install
-    PUPPETEER_SKIP_DOWNLOAD=true
-    ```
-
-3.  **Read `BROWSERSHOT_CHROME_PATH` in your Browsershot call** (see `config/browsershot.php` and `app/Http/Controllers/ScreenshotController.php`):
-
-    ```php
-    if ($chromePath = config('browsershot.chrome_path')) {
-        $browsershot->setChromePath($chromePath);
-    }
-    ```
-
-4.  **Deploy, then verify** on the server with the bundled diagnostic command, which finds the Chrome binary, checks its architecture and shared libraries, and actually tries to launch it:
+2.  **Deploy, then verify** on the server with the bundled diagnostic command, which finds the Chrome binary, checks its architecture and shared libraries, and actually tries to launch it:
 
     ```sh
     php artisan browsershot:diagnose
@@ -177,6 +180,8 @@ The two scripts that do this live in [`deploy/chromium.sh`](deploy/chromium.sh) 
 
     A `VERDICT: WORKS ✓` for `/var/www/bin/chromium` means Browsershot is ready.
 
+> **Overrides:** Everything above is auto-detected, but you can force any value with the `BROWSERSHOT_CHROME_PATH`, `BROWSERSHOT_NODE_MODULE_PATH`, `BROWSERSHOT_NODE_BINARY`, or `BROWSERSHOT_NPM_BINARY` env vars. The controller applies the Chrome path via `config('browsershot.chrome_path')` (see `app/Http/Controllers/ScreenshotController.php`).
+>
 > **Note:** This is specific to ARM64 hosts that lack Chrome's system libraries (like Laravel Cloud). On a normal x86-64 server you can usually just let Puppeteer download its own Chrome, or `apt install` the libraries directly.
 
 ## Contributing

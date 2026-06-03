@@ -22,9 +22,11 @@ Routes are in `routes/api.php`; logic in `app/Http/Controllers/ScreenshotControl
 
 - `POST /api/snap-from-url` — body `{ "url": "https://…" }` → PNG of that page.
 - `POST /api/snap-from-html` — body `{ "html": "<div>…</div>", "tailwind_version": 4?, "width": int?, "height": int? }` → PNG of the rendered HTML. The controller wraps the snippet in a full HTML doc with the Inter font and a Tailwind CDN (`getTailwindCdn` / `prepareHtml`).
-- `POST /api/login` — Sanctum token (`Api/AuthController`).
+- `POST /api/login` — legacy Sanctum token endpoint (`Api/AuthController`); not used by the snap auth below.
 
-Both snap endpoints return raw `image/png` bytes (see `createImageResponse`). Note: the auth middleware group around the snap routes is currently **commented out**, so they're effectively public right now.
+Both snap endpoints return raw `image/png` bytes (see `createImageResponse`).
+
+**Auth:** the snap routes are protected by the `screenshot.key` middleware (`app/Http/Middleware/ValidateScreenshotApiKey.php`, aliased in `bootstrap/app.php`). It compares the `Authorization: Bearer <token>` against `config('screenshot.api_key')` (`SCREENSHOT_API_KEY` in `.env`) using `hash_equals`. **If no key is set, the endpoints are open** (so it works out of the box); set a key to require auth. Generate one with `php artisan screenshot:key` (writes/replaces `SCREENSHOT_API_KEY` in `.env`, like `key:generate`).
 
 JSON gotcha: the HTML payload contains quotes, so inner double-quotes must be escaped (`\"`) or the request fails validation with a `422`. When testing with `curl`, use `--fail` and `--output file.png` so a failed request doesn't silently save an error body as a `.png`.
 
@@ -32,10 +34,12 @@ JSON gotcha: the HTML payload contains quotes, so inner double-quotes must be es
 
 `spatie/browsershot` needs a Chromium binary it can launch. How that binary is provided differs by environment, and getting it working on Laravel Cloud's ARM64 runtime was non-trivial.
 
-`config/browsershot.php` exposes the knobs the controller honors:
-- `BROWSERSHOT_CHROME_PATH` → `->setChromePath()` (only applied if set)
-- `BROWSERSHOT_NODE_MODULE_PATH` → `->setNodeModulePath()` (defaults to project `node_modules`; on Cloud it points at a persisted copy)
-- `BROWSERSHOT_NODE_BINARY` / `BROWSERSHOT_NPM_BINARY` (optional)
+`config/browsershot.php` exposes the knobs the controller honors. **These are all auto-detected and optional** — the defaults make Cloud zero-config without breaking local dev:
+- `chrome_path` → `->setChromePath()` (only applied if non-null). Defaults to `/var/www/bin/chromium` **when that file exists** (Cloud), else `null` (local — Puppeteer self-resolves). Override with `BROWSERSHOT_CHROME_PATH`.
+- `node_module_path` → `->setNodeModulePath()`. Defaults to `/var/www/browsershot/node_modules` **when that dir exists** (Cloud), else local `node_modules`. Override with `BROWSERSHOT_NODE_MODULE_PATH`.
+- `node_binary` / `npm_binary` → optional `BROWSERSHOT_NODE_BINARY` / `BROWSERSHOT_NPM_BINARY`.
+
+`.puppeteerrc.cjs` skips Puppeteer's own Chrome download on `linux-arm64` (where Google ships no build), but lets it download normally on local macOS/x86. So no `PUPPETEER_SKIP_DOWNLOAD` env var is needed.
 
 ### Local development
 `npm install` pulls Puppeteer, which downloads a Chromium that matches your machine. On macOS/Linux x86-64 that "just works" and you can leave `BROWSERSHOT_CHROME_PATH` empty.
@@ -46,13 +50,13 @@ Google publishes **no `linux-arm64` Chrome build**, so Puppeteer's auto-download
 The working solution (see `deploy/`):
 1. **`deploy/chromium.sh`** (wired up as a Laravel Cloud **build command**) uses **Playwright purely as a downloader** to fetch a native **arm64 Chromium** (Playwright compiles/hosts arm64 builds; Google doesn't), into `$HOME/.cache/ms-playwright`.
 2. **`deploy/install-chromium-deps.cjs`** is a Node resolver that downloads Chromium's required **shared libraries** (`libglib`, `libgbm`, `libasound`, … + transitive deps) as Debian bookworm **arm64 `.deb`s, directly over HTTPS** (no apt). `chromium.sh` extracts them with `dpkg-deb -x` into `$HOME/chrome-deps`.
-3. `chromium.sh` writes a launcher at **`/var/www/bin/chromium`** that exports `LD_LIBRARY_PATH` (pointing at the bundled libs) and execs the real Chromium. Browsershot is pointed at this launcher via `BROWSERSHOT_CHROME_PATH=/var/www/bin/chromium`.
+3. `chromium.sh` writes a launcher at **`/var/www/bin/chromium`** that exports `LD_LIBRARY_PATH` (pointing at the bundled libs) and execs the real Chromium. `config/browsershot.php` auto-detects this path, so Browsershot uses it without any env var.
 
-Everything lands under `$HOME`, so it survives into runtime. The README's "Getting spatie/browsershot working with Laravel Cloud" section is the user-facing writeup of this.
+Everything lands under `$HOME`, so it survives into runtime. `chromium.sh` is idempotent (skips the download if a working launcher already exists) and trims Playwright's unused headless-shell/ffmpeg to keep the image small. The README's "Getting spatie/browsershot working with Laravel Cloud" section is the user-facing writeup of this.
 
-Required Laravel Cloud config:
+Required Laravel Cloud config — **just the build command** (paths/skip-download are auto-detected, see above):
 - **Build command:** `bash deploy/chromium.sh` (after the `composer`/`npm` steps)
-- **Env vars:** `BROWSERSHOT_CHROME_PATH=/var/www/bin/chromium`, and optionally `PUPPETEER_SKIP_DOWNLOAD=true` to skip Puppeteer's pointless x86-64 download.
+- No env vars required. (Optional overrides: `BROWSERSHOT_CHROME_PATH`, `BROWSERSHOT_NODE_MODULE_PATH`.)
 
 Key insight: the missing-libraries problem is intrinsic to Laravel Cloud's locked-down ARM64 image, **not** to Puppeteer — Playwright-as-the-engine would hit the same wall. So the fix is supplying a native arm64 Chromium + its libs, not switching browser libraries.
 

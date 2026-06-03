@@ -23,6 +23,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(append: [
             ThrottleRequests::class.':api',
         ]);
+
+        $middleware->alias([
+            'screenshot.key' => \App\Http\Middleware\ValidateScreenshotApiKey::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
