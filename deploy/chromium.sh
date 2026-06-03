@@ -26,10 +26,23 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "==> Environment: user $(id -un 2>/dev/null) (uid $(id -u 2>/dev/null)), HOME=${HOME}"
 
+# Fast path: if a working launcher + libs are already in place (e.g. a cached
+# build layer), don't re-download ~300MB of browser + libs.
+if [ -x "${HOME}/bin/chromium" ] && [ -d "${DEPS_DIR}" ] \
+   && "${HOME}/bin/chromium" --no-sandbox --headless=new --version >/dev/null 2>&1; then
+  echo "==> Chromium already installed and working — skipping download. ($(${HOME}/bin/chromium --no-sandbox --headless=new --version 2>/dev/null))"
+  exit 0
+fi
+
 echo "==> Installing arm64 Chromium via Playwright"
 npx --yes playwright@latest install chromium || echo "    (playwright reported an error)"
 BIN="$(find "${PLAYWRIGHT_BROWSERS_PATH}" -type f -name chrome -path '*chrome-linux*' 2>/dev/null | sort -V | tail -n1)"
 echo "    binary: ${BIN:-NONE FOUND}"
+
+# Browsershot uses the full headed Chromium, not the headless-shell. Drop the
+# headless-shell + ffmpeg Playwright also pulls, to keep the deploy image small.
+rm -rf "${PLAYWRIGHT_BROWSERS_PATH}"/chromium_headless_shell-* \
+       "${PLAYWRIGHT_BROWSERS_PATH}"/ffmpeg-* 2>/dev/null
 
 echo "==> Fetching Chromium's shared libraries from Debian (direct HTTPS, no apt)"
 rm -rf "${DEPS_DIR}" /tmp/chrome-debs 2>/dev/null

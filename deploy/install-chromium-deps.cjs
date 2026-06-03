@@ -32,11 +32,11 @@ const SKIP = new Set([
   'libc6', 'libgcc-s1', 'libstdc++6', 'libc-bin', 'zlib1g', 'dpkg', 'debconf',
 ]);
 
-// (Packages.gz URL, pool base URL) for bookworm main + security + updates.
+// (Packages.gz URL, pool base URL). bookworm main alone covers Chromium's full
+// library closure; the -security/-updates suites are intentionally omitted (their
+// arm64 indices 404 and aren't needed).
 const SOURCES = [
   ['https://deb.debian.org/debian/dists/bookworm/main/binary-arm64/Packages.gz', 'https://deb.debian.org/debian/'],
-  ['https://deb.debian.org/debian-security/dists/bookworm-security/main/binary-arm64/Packages.gz', 'https://deb.debian.org/debian-security/'],
-  ['https://deb.debian.org/debian/dists/bookworm-updates/main/binary-arm64/Packages.gz', 'https://deb.debian.org/debian/'],
 ];
 
 function get(url) {
