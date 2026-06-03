@@ -1,6 +1,8 @@
-# Laravel Screenshot Service
+# Screenshot
 
-This is a Laravel-based microservice for capturing website screenshots using the `spatie/browsershot` package. It provides API endpoints to take snapshots of websites by URL or by rendering provided HTML with Tailwind CSS.
+Deploy a screenshot micro-service from [Laravel Cloud](https://laravel.com/cloud).
+
+This micro-service will allow you to generate website screenshots from a **URL** or **HTML**. Under the hood this service utilizes `puppeteer` and `spatie/browsershot` (learn how we got it working with Cloud below). 
 
 ## Features
 
@@ -49,6 +51,14 @@ This is a Laravel-based microservice for capturing website screenshots using the
 
 
 ## Usage
+
+### Example
+
+curl -X POST -H "Content-Type: application/json" \
+    -d '{"html":"<p class='bg-pink-200 text-indigo-600'>Tailwind support out of the box</div>"}' \
+    https://screenshot.laravel.cloud/api/snap-from-html \
+    --output ./screenshot.png && open ./screenshot.png
+
 
 ### Endpoints:
 
