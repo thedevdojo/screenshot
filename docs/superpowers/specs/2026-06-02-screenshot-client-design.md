@@ -16,7 +16,7 @@ instead of hand-rolling `Http::post(...)` + storage every time.
 
 ## Location & packaging
 
-A **self-contained Composer package living inside this repo** at `packages/Screenshot/`, namespace `DevDojo\Screenshot`. It is autoloaded by this app's `composer.json` (PSR-4 + `files` for the helper) and its service provider registered in `bootstrap/providers.php`. This lets the screenshot service **dogfood its own client**, while keeping the package self-contained and extractable to a standalone repo (`devdojo/screenshot`) later with no code changes.
+A **self-contained Composer package living inside this repo** at `packages/devdojo/screenshot-client/`, namespace `DevDojo\ScreenshotClient`. It is autoloaded by this app's `composer.json` (PSR-4 + `files` for the helper) and its service provider registered in `bootstrap/providers.php`. This lets the screenshot service **dogfood its own client**, while keeping the package self-contained and extractable to a standalone repo (`devdojo/screenshot-client`) later with no code changes.
 
 ## API surface
 
@@ -54,7 +54,7 @@ Both the helper and the facade return a `PendingScreenshot` builder. `screenshot
 ## Components
 
 ```
-packages/Screenshot/
+packages/devdojo/screenshot-client/
   src/
     ScreenshotServiceProvider.php   // merge/publish config, bind manager singleton
     ScreenshotManager.php           // entry point: url()/html() -> new PendingScreenshot; holds config
