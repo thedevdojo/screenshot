@@ -31,12 +31,13 @@ return [
     | Default storage disk
     |--------------------------------------------------------------------------
     |
-    | The filesystem disk save() writes to. Null falls back to your app's
-    | default disk (config('filesystems.default')).
+    | The filesystem disk save() writes to. Defaults to "public" so saved
+    | screenshots are web-accessible (run `php artisan storage:link` once).
+    | Set to null to fall back to your app's default disk.
     |
     */
 
-    'disk' => env('SCREENSHOT_DISK'),
+    'disk' => env('SCREENSHOT_DISK', 'public'),
 
     /*
     |--------------------------------------------------------------------------

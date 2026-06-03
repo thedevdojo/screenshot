@@ -46,7 +46,7 @@ Both the helper and the facade return a `PendingScreenshot` builder. `screenshot
 
 ### Terminal methods (perform the HTTP request)
 
-- `save(?string $path = null): string` — capture, store to the configured/overridden disk, return the stored path. Auto-generates `screenshots/{uuid}.png` when `$path` is null.
+- `save(?string $path = null): StoredScreenshot` — capture, store to the configured/overridden disk; auto-generates `screenshots/{uuid}.png` when `$path` is null. Returns a `StoredScreenshot` value object exposing `->path()`, `->disk()`, and `->url()` (full public URL), and stringifying to the path. The default disk is `public`, so saved screenshots are web-accessible after `php artisan storage:link`.
 - `bytes(): string` — return raw PNG bytes, no storage.
 - `base64(bool $dataUri = false): string` — base64 string, or a `data:image/png;base64,…` URI when `$dataUri` is true.
 - `response(): \Illuminate\Http\Response` — an inline `image/png` HTTP response, returnable directly from a controller.

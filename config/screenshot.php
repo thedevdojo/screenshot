@@ -34,7 +34,9 @@ return [
 
     'url' => env('SCREENSHOT_URL', 'https://screenshot.laravel.cloud'),
 
-    'disk' => env('SCREENSHOT_DISK'),
+    // Defaults to the "public" disk so saved screenshots are web-accessible
+    // (run `php artisan storage:link` once). Override with SCREENSHOT_DISK.
+    'disk' => env('SCREENSHOT_DISK', 'public'),
 
     'timeout' => env('SCREENSHOT_TIMEOUT', 120),
 

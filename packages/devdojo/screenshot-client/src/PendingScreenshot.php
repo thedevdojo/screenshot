@@ -92,16 +92,18 @@ class PendingScreenshot
     | Terminals ----------------------------------------------------------- */
 
     /**
-     * Capture and store the screenshot, returning the stored path.
-     * Auto-generates a path under screenshots/ when none is given.
+     * Capture and store the screenshot, returning a StoredScreenshot
+     * (exposes ->path() and ->url(); stringifies to the path). Auto-generates
+     * a path under screenshots/ when none is given.
      */
-    public function save(?string $path = null): string
+    public function save(?string $path = null): StoredScreenshot
     {
         $path ??= 'screenshots/'.Str::uuid().'.png';
+        $disk = $this->disk ?: $this->defaultDisk();
 
-        Storage::disk($this->disk ?: $this->defaultDisk())->put($path, $this->bytes());
+        Storage::disk($disk)->put($path, $this->bytes());
 
-        return $path;
+        return new StoredScreenshot($disk, $path);
     }
 
     /** Capture and return the raw PNG bytes. */

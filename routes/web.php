@@ -1,20 +1,26 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Storage;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-// Demo: capture a screenshot of some Tailwind HTML, save it to storage, and
-// display the saved image. Uses the bundled devdojo/screenshot-client.
+// Demo: capture a screenshot of some Tailwind HTML, save it to the (public)
+// disk, and redirect to its public URL. Uses the bundled devdojo/screenshot-client.
 Route::get('/example', function () {
-    $path = screenshot()
+    $shot = screenshot()
         ->html('<p class="bg-green-500 p-10">Example Here</p>')
         ->save('screenshots/example.png');
 
-    $disk = config('screenshot.disk') ?: config('filesystems.default');
+    return redirect($shot->url());
+});
 
-    return response()->file(Storage::disk($disk)->path($path));
+// Demo: screenshot a live URL and display it from its public URL.
+Route::get('/example-url', function () {
+    $shot = screenshot()
+        ->url('https://google.com')
+        ->save('screenshots/example-url.png');
+
+    return redirect($shot->url());
 });

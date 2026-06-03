@@ -38,13 +38,14 @@ class ScreenshotClientTest extends TestCase
             'https://screenshot.test/api/snap-from-html' => Http::response('PNGBYTES', 200, ['Content-Type' => 'image/png']),
         ]);
 
-        $path = screenshot()
+        $shot = screenshot()
             ->html('<p class="bg-green-500 p-10">Example Here</p>')
             ->dimensions(800, 400)
             ->tailwind(4)
             ->save('screenshots/example.png');
 
-        $this->assertSame('screenshots/example.png', $path);
+        $this->assertSame('screenshots/example.png', $shot->path());
+        $this->assertSame('screenshots/example.png', (string) $shot); // stringifies to path
         Storage::disk('local')->assertExists('screenshots/example.png');
         $this->assertSame('PNGBYTES', Storage::disk('local')->get('screenshots/example.png'));
 
@@ -72,10 +73,22 @@ class ScreenshotClientTest extends TestCase
     {
         Http::fake(['*' => Http::response('PNG', 200)]);
 
-        $path = screenshot()->html('<p>hi</p>')->save();
+        $shot = screenshot()->html('<p>hi</p>')->save();
 
-        $this->assertMatchesRegularExpression('#^screenshots/[0-9a-f-]{36}\.png$#', $path);
-        Storage::disk('local')->assertExists($path);
+        $this->assertMatchesRegularExpression('#^screenshots/[0-9a-f-]{36}\.png$#', $shot->path());
+        Storage::disk('local')->assertExists($shot->path());
+    }
+
+    public function test_save_returns_public_url(): void
+    {
+        Storage::fake('public');
+        Http::fake(['*' => Http::response('PNG', 200)]);
+
+        $shot = screenshot()->html('<p>hi</p>')->disk('public')->save('screenshots/x.png');
+
+        $this->assertSame('public', $shot->disk());
+        $this->assertSame(Storage::disk('public')->url('screenshots/x.png'), $shot->url());
+        $this->assertStringContainsString('screenshots/x.png', $shot->url());
     }
 
     public function test_base64_returns_encoded_bytes_and_data_uri(): void
