@@ -1,8 +1,8 @@
 # Screenshot Service
 
-Deploy a screenshot micro-service to [Laravel Cloud](https://laravel.com/cloud). Deploy it and run `php artisan screenshot:key`, this will generate your new API Key. Now, you can easily generate website screenshots from a **URL** or **HTML**. 
+Deploy a screenshot micro-service to [Laravel Cloud](https://laravel.com/cloud). Deploy it and run `php artisan screenshot:key`, this will generate your new API Key. Next, start sending POST requests to easily generate screenshots from a **URL** or **HTML**. 
 
-Now you can start sending POST requests to the API:
+:
 
 ```
 curl -X POST \
