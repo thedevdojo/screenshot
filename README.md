@@ -1,8 +1,8 @@
-# Screenshot
+# Screenshot Service
 
-Deploy a screenshot micro-service from [Laravel Cloud](https://laravel.com/cloud).
+Deploy a screenshot micro-service to [Laravel Cloud](https://laravel.com/cloud).
 
-This micro-service will allow you to generate website screenshots from a **URL** or **HTML**. Under the hood this service utilizes `puppeteer` and `spatie/browsershot` (learn how we got it working with Cloud below). 
+This micro-service will allow you to generate website screenshots from a **URL** or **HTML**. Under the hood this service utilizes `puppeteer` and `spatie/browsershot` (learn more about how we [got it working with Cloud below](#getting-spatiebrowsershot-working-with-laravel-cloud)). 
 
 ## Installation
 
