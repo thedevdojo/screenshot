@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Spatie\Browsershot\Browsershot;
-use Spatie\Image\Manipulations;
 
 class ScreenshotController extends Controller
 {
@@ -26,15 +25,20 @@ class ScreenshotController extends Controller
         
         list($width, $height) = $this->getDimensions($request);
 
-        $screenshot = Browsershot::url($request->url)
-            ->setChromePath('/usr/bin/google-chrome')
+        $browsershot = Browsershot::url($request->url)
+            ->setNodeModulePath(config('browsershot.node_module_path'))
             ->windowSize($width, $height)
             ->deviceScaleFactor(2)
             ->waitUntilNetworkIdle()
             ->newHeadless()
             ->noSandbox()
-            ->timeout(120)
-            ->screenshot();
+            ->timeout(120);
+
+        if ($chromePath = config('browsershot.chrome_path')) {
+            $browsershot->setChromePath($chromePath);
+        }
+
+        $screenshot = $browsershot->screenshot();
 
         return $this->createImageResponse($screenshot);
     }
@@ -53,15 +57,20 @@ class ScreenshotController extends Controller
         list($width, $height) = $this->getDimensions($request);
         $html = $this->prepareHtml($request->html, $tailwindCdn);
 
-        $screenshot = Browsershot::html($html)
-            ->setChromePath('/usr/bin/google-chrome')
+        $browsershot = Browsershot::html($html)
+            ->setNodeModulePath(config('browsershot.node_module_path'))
             ->windowSize($width, $height)
             ->deviceScaleFactor(2)
             ->newHeadless()
             ->noSandbox()
             ->timeout(120)
-            ->setContentUrl('https://www.example.com')
-            ->screenshot();
+            ->setContentUrl('https://www.example.com');
+
+        if ($chromePath = config('browsershot.chrome_path')) {
+            $browsershot->setChromePath($chromePath);
+        }
+
+        $screenshot = $browsershot->screenshot();
 
         return $this->createImageResponse($screenshot);
     }

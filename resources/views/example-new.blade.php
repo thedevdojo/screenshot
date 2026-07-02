@@ -1,0 +1,1 @@
+<img src="{{ screenshot('https://google.com')->save('screenshot.png')->url() }}" style="width:1280px; height:auto" />
