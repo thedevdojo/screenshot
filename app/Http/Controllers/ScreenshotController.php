@@ -38,6 +38,10 @@ class ScreenshotController extends Controller
             $browsershot->setChromePath($chromePath);
         }
 
+        if ($nodeBinary = config('browsershot.node_binary')) {
+            $browsershot->setNodeBinary($nodeBinary);
+        }
+
         $screenshot = $browsershot->screenshot();
 
         return $this->createImageResponse($screenshot);
@@ -68,6 +72,10 @@ class ScreenshotController extends Controller
 
         if ($chromePath = config('browsershot.chrome_path')) {
             $browsershot->setChromePath($chromePath);
+        }
+
+        if ($nodeBinary = config('browsershot.node_binary')) {
+            $browsershot->setNodeBinary($nodeBinary);
         }
 
         $screenshot = $browsershot->screenshot();
