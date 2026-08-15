@@ -56,7 +56,7 @@ class ScreenshotController extends Controller
     public function snapFromHtml(Request $request)
     {
         $request->validate(['html' => 'required|string']);
-        
+
         $tailwindCdn = $this->getTailwindCdn($request);
         list($width, $height) = $this->getDimensions($request);
         $html = $this->prepareHtml($request->html, $tailwindCdn);
@@ -69,6 +69,14 @@ class ScreenshotController extends Controller
             ->noSandbox()
             ->timeout(120)
             ->setContentUrl('https://www.example.com');
+
+        // A complete document may pull remote fonts and images the fragment
+        // wrapper never does; give the network a beat to settle so captures
+        // don't race them. Non-strict: up to two in-flight requests still
+        // count as idle, so a long-polling page cannot hang the shot.
+        if ($this->isCompleteDocument($request->html)) {
+            $browsershot->waitUntilNetworkIdle(false);
+        }
 
         if ($chromePath = config('browsershot.chrome_path')) {
             $browsershot->setChromePath($chromePath);
@@ -116,16 +124,38 @@ class ScreenshotController extends Controller
     /**
      * Prepare the HTML with necessary styles and scripts
      *
+     * The wrapper exists to make bare fragments presentable. A complete
+     * document must render exactly as posted: injecting the wrapper into one
+     * corrupts it — the Tailwind v3 CDN's runtime adds an unlayered
+     * universal --tw-* variable reset that overrides the document's own
+     * layered Tailwind v4 rules (gradients lose their color stops), and the
+     * Inter font stack overrides the document's fonts.
+     *
      * @param string $content
      * @param string $tailwindCdn
      * @return string
      */
     protected function prepareHtml(string $content, string $tailwindCdn): string
     {
+        if ($this->isCompleteDocument($content)) {
+            return $content;
+        }
+
         $fontStack = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">';
         $fontStack .= '<style>html, body{ font-family: "Inter", sans-serif; font-optical-sizing: auto; }</style>';
-        
+
         return '<html><head>' . $fontStack . $tailwindCdn . '</head><body class="antialiased">' . $content . '</body></html>';
+    }
+
+    /**
+     * Whether the payload is a full HTML document rather than a fragment.
+     *
+     * @param string $content
+     * @return bool
+     */
+    protected function isCompleteDocument(string $content): bool
+    {
+        return (bool) preg_match('/^\s*(?:<!doctype\b|<html\b)/i', $content);
     }
 
     /**

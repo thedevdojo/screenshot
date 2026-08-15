@@ -21,7 +21,7 @@ Production runs on **Laravel Cloud** at `https://screenshot-service-main-*.larav
 Routes are in `routes/api.php`; logic in `app/Http/Controllers/ScreenshotController.php`.
 
 - `POST /api/snap-from-url` — body `{ "url": "https://…" }` → PNG of that page.
-- `POST /api/snap-from-html` — body `{ "html": "<div>…</div>", "tailwind_version": 4?, "width": int?, "height": int? }` → PNG of the rendered HTML. The controller wraps the snippet in a full HTML doc with the Inter font and a Tailwind CDN (`getTailwindCdn` / `prepareHtml`).
+- `POST /api/snap-from-html` — body `{ "html": "<div>…</div>", "tailwind_version": 4?, "width": int?, "height": int? }` → PNG of the rendered HTML. **Fragments** are wrapped in a full HTML doc with the Inter font and a Tailwind CDN (`getTailwindCdn` / `prepareHtml`). **Complete documents** (payload starting with `<!doctype` or `<html`) render exactly as posted — no wrapper, no CDN, no font injection — and wait for network idle (non-strict) so remote fonts/images settle. Never inject the wrapper into a complete document: the v3 CDN's unlayered universal `--tw-*` reset overrides the document's layered Tailwind v4 rules and silently breaks its gradients (found the hard way via DevDojo's site thumbnails, 2026-08-14).
 - `POST /api/login` — legacy Sanctum token endpoint (`Api/AuthController`); not used by the snap auth below.
 
 Both snap endpoints return raw `image/png` bytes (see `createImageResponse`).
